@@ -80,7 +80,11 @@ const RickRollGame: React.FC = () => {
         className="fixed inset-0 flex items-center justify-center p-4"
       >
         <DialogPanel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-          <DialogTitle className="text-lg font-bold mb-4">Result</DialogTitle>
+          <DialogTitle className="text-lg font-bold mb-4">
+            {selectedIndex !== null && revealed[selectedIndex] === "WINNER"
+              ? "Result : Winner"
+              : "Result : Game Over"}
+          </DialogTitle>
           {selectedIndex !== null &&
             (revealed[selectedIndex] === "WINNER" ? (
               <h2 className="text-green-500 text-center text-2xl font-bold">
