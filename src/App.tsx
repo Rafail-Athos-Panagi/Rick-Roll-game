@@ -1,27 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
-const rickRollVideo = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1";
-const victoryAudio = "/victory.mp3"; // Victory audio from the public folder
-const suspenseAudio = "/suspense.mp3"; // Suspense audio from the public folder
+const rickRollVideo = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1";
+const victoryAudio = "/victory.mp3";
+const suspenseAudio = "/suspense.mp3";
+const silentAudio = "/silent.mp3"; // 1-second silent audio for autoplay trick
 
 const RickRollGame: React.FC = () => {
-  const [revealed, setRevealed] = useState<(string | null)[]>(
-    Array(4).fill(null)
-  );
+  const [revealed, setRevealed] = useState<(string | null)[]>(Array(4).fill(null));
   const [winningIndex] = useState(Math.floor(Math.random() * 4));
   const [gameOver, setGameOver] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showDialog, setShowDialog] = useState(false);
+
+  // Play silent audio on mount to unlock autoplay permissions
+  useEffect(() => {
+    const silent = new Audio(silentAudio);
+    silent.play().catch(() => {}); // Play silently to trick the browser
+  }, []);
 
   const handlePick = async (index: number) => {
     if (!gameOver && revealed[index] === null) {
       setGameOver(true);
       setSelectedIndex(index);
 
-      const audio = new Audio(suspenseAudio);
-      audio.play();
+      // Play suspense audio immediately
+      const suspense = new Audio(suspenseAudio);
+      suspense.play().catch(() => console.log("Suspense audio blocked"));
 
       await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait for suspense audio
 
@@ -44,12 +50,24 @@ const RickRollGame: React.FC = () => {
 
       if (newRevealed[index] === "WINNER") {
         const winAudio = new Audio(victoryAudio);
-        winAudio.play();
+        winAudio.play().catch(() => console.log("Victory sound blocked"));
       }
 
       setShowDialog(true);
     }
   };
+
+  // Send autoplay message to YouTube iframe when dialog opens
+  useEffect(() => {
+    if (showDialog) {
+      setTimeout(() => {
+        const iframe = document.getElementById("rickRollFrame") as HTMLIFrameElement;
+        if (iframe) {
+          iframe.contentWindow?.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
+        }
+      }, 1000);
+    }
+  }, [showDialog]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-6 p-6">
@@ -74,6 +92,7 @@ const RickRollGame: React.FC = () => {
         ))}
       </div>
 
+      {/* Dialog for game result */}
       <Dialog
         open={showDialog}
         onClose={() => setShowDialog(false)}
@@ -82,31 +101,25 @@ const RickRollGame: React.FC = () => {
         <DialogPanel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
           <DialogTitle className="text-lg font-bold mb-4">
             {selectedIndex !== null && revealed[selectedIndex] === "WINNER"
-              ? "Result : Winner"
-              : "Result : Game Over"}
+              ? "Result: Winner!"
+              : "Result: Game Over"}
           </DialogTitle>
+
           {selectedIndex !== null &&
             (revealed[selectedIndex] === "WINNER" ? (
-              <h2 className="text-green-500 text-center text-2xl font-bold">
-                You Win!
-              </h2>
+              <h2 className="text-green-500 text-center text-2xl font-bold">You Win!</h2>
             ) : (
               <iframe
+                id="rickRollFrame"
                 width="100%"
                 height="315"
-                src={rickRollVideo}
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?enablejsapi=1&autoplay=1&mute=0"
                 title="Rick Roll Video"
                 frameBorder="0"
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               ></iframe>
             ))}
-          <button
-            onClick={() => setShowDialog(false)}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md md:w-auto w-full"
-          >
-            Close
-          </button>
         </DialogPanel>
       </Dialog>
     </div>
