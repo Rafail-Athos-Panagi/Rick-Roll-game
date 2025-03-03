@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 
-const rickRollVideo = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1";
 const victoryAudio = "/victory.mp3"; // Victory audio from the public folder
 const suspenseAudio = "/suspense.mp3"; // Suspense audio from the public folder
+const rickRollAudio = "/Rick_Rolled.mp3"; // Rick Roll audio from the public folder
+const rickRollImage = "/icegif-162.gif"; // Rick Roll image from the public folder
 
 const RickRollGame: React.FC = () => {
   const [revealed, setRevealed] = useState<(string | null)[]>(
@@ -31,7 +32,7 @@ const RickRollGame: React.FC = () => {
       while (revealedCount < 3) {
         const randIndex = Math.floor(Math.random() * 4);
         if (randIndex !== index && newRevealed[randIndex] === null) {
-          newRevealed[randIndex] = rickRollVideo;
+          newRevealed[randIndex] = "RICK_ROLL";
           revealedCount++;
         }
       }
@@ -39,12 +40,15 @@ const RickRollGame: React.FC = () => {
       setRevealed(newRevealed);
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait before revealing selection
 
-      newRevealed[index] = index === winningIndex ? "WINNER" : rickRollVideo;
+      newRevealed[index] = index === winningIndex ? "WINNER" : "RICK_ROLL";
       setRevealed(newRevealed);
 
       if (newRevealed[index] === "WINNER") {
         const winAudio = new Audio(victoryAudio);
         winAudio.play();
+      } else {
+        const rickAudio = new Audio(rickRollAudio);
+        rickAudio.play();
       }
 
       setShowDialog(true);
@@ -91,15 +95,11 @@ const RickRollGame: React.FC = () => {
                 You Win!
               </h2>
             ) : (
-              <iframe
-                width="100%"
-                height="315"
-                src={rickRollVideo}
-                title="Rick Roll Video"
-                frameBorder="0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              ></iframe>
+              <img
+                src={rickRollImage}
+                alt="Rick Roll"
+                className="w-full h-auto"
+              />
             ))}
           <button
             onClick={() => setShowDialog(false)}
